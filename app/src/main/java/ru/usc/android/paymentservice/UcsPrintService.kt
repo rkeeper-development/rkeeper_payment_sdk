@@ -62,7 +62,7 @@ abstract class UcsPrintService : Service() {
         val paymentResultIntent = when (printResult) {
             is PrintComplete ->
                 Intent(PRINT_COMPLETE).apply {
-                    putExtra("device", "Terminal 2")
+                    putExtra("device", "Print Terminal 2")
                 }
             is PrintError ->
                 Intent(PRINT_ERROR).apply {
@@ -79,7 +79,7 @@ abstract class UcsPrintService : Service() {
         val printResultIntent = when (printResult) {
             is PrintComplete ->
                 Intent(PRINT_COMPLETE).apply {
-                    putExtra("device", "Terminal 2")
+                    putExtra("device", "Print Terminal 2")
                 }
             is PrintError ->
                 Intent(PRINT_ERROR).apply {
