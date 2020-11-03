@@ -16,6 +16,12 @@ abstract class UcsPrintService : Service() {
         const val START_PRINT_ZREPORT = "ru.usc.android.paymentservice.PRINT_ZREPORT"
         const val PRINT_COMPLETE = "ru.usc.android.paymentservice.PRINT_COMPLETE"
         const val PRINT_ERROR = "ru.usc.android.paymentservice.PRINT_ERROR"
+        const val PARAM_OPERATION_ID = "OperationId"
+        const val PARAM_ORDER = "Order"
+        const val PARAM_HEADERS = "Headers"
+        const val PARAM_FOOTERS = "Footers"
+        const val PARAM_ERROR_CODE = "ErrorCode"
+        const val PARAM_ERROR_MESSAGE = "ErrorMessage"
     }
 
     override fun onBind(intent: Intent): IBinder {
@@ -39,13 +45,22 @@ abstract class UcsPrintService : Service() {
                     }
                 }
                 START_PRINT_NONFISCAL -> {
-                    // TODO:
+                    GlobalScope.launch {
+                        startPrintNonFiscalDataInternal(it)
+                        stopSelfResult(startId)
+                    }
                 }
                 START_PRINT_XREPORT -> {
-                    // TODO:
+                    GlobalScope.launch {
+                        startPrintXReportInternal(it)
+                        stopSelfResult(startId)
+                    }
                 }
                 START_PRINT_ZREPORT -> {
-                    // TODO:
+                    GlobalScope.launch {
+                        startPrintZReportInternal(it)
+                        stopSelfResult(startId)
+                    }
                 }
                 else -> null
             }
@@ -55,21 +70,21 @@ abstract class UcsPrintService : Service() {
     }
 
     suspend fun startPrintFiscalCheckInternal(intent: Intent){
-        val operationId = intent.extras?.getString("OperationId")
-        val order = intent.extras?.getString("Order")
-        val headers = intent.extras?.getStringArray("Headers")
-        val footers = intent.extras?.getStringArray("Footers")
+        val operationId = intent.extras?.getString(PARAM_OPERATION_ID)
+        val order = intent.extras?.getString(PARAM_ORDER)
+        val headers = intent.extras?.getStringArray(PARAM_HEADERS)
+        val footers = intent.extras?.getStringArray(PARAM_FOOTERS)
         val printResult = startPrintFiscalCheck(order, headers, footers)
         val paymentResultIntent = when (printResult) {
             is PrintComplete ->
                 Intent(PRINT_COMPLETE).apply {
-                    putExtra("OperationId", operationId)
+                    putExtra(PARAM_OPERATION_ID, operationId)
                 }
             is PrintError ->
                 Intent(PRINT_ERROR).apply {
-                    putExtra("OperationId", operationId)
-                    putExtra("ErrorCode", printResult.errorCode)
-                    putExtra("ErrorMessage", printResult.errorMsg)
+                    putExtra(PARAM_OPERATION_ID, operationId)
+                    putExtra(PARAM_ERROR_CODE, printResult.errorCode)
+                    putExtra(PARAM_ERROR_MESSAGE, printResult.errorMsg)
 
                 }
         }
@@ -77,19 +92,60 @@ abstract class UcsPrintService : Service() {
     }
 
     suspend fun startPrintRefundCheckInternal(intent: Intent){
-        val order = intent.extras?.getString("order")
-        val operationId = intent.extras?.getString("operationId")
+        val order = intent.extras?.getString(PARAM_ORDER)
+        val operationId = intent.extras?.getString(PARAM_OPERATION_ID)
         val printResult = startPrintRefundCheck(order)
         val printResultIntent = when (printResult) {
             is PrintComplete ->
                 Intent(PRINT_COMPLETE).apply {
-                    putExtra("OperationId", operationId)
+                    putExtra(PARAM_OPERATION_ID, operationId)
                 }
             is PrintError ->
                 Intent(PRINT_ERROR).apply {
-                    putExtra("OperationId", operationId)
-                    putExtra("ErrorCode", printResult.errorCode)
-                    putExtra("ErrorMessage", printResult.errorMsg)
+                    putExtra(PARAM_OPERATION_ID, operationId)
+                    putExtra(PARAM_ERROR_CODE, printResult.errorCode)
+                    putExtra(PARAM_ERROR_MESSAGE, printResult.errorMsg)
+                }
+        }
+        sendBroadcast(printResultIntent)
+    }
+
+    suspend fun startPrintNonFiscalDataInternal(intent: Intent){
+        val operationId = intent.extras?.getString(PARAM_OPERATION_ID)
+
+    }
+
+    suspend fun startPrintXReportInternal(intent: Intent){
+        val operationId = intent.extras?.getString(PARAM_OPERATION_ID)
+        val printResult = startPrintXReport()
+        val printResultIntent = when (printResult) {
+            is PrintComplete ->
+                Intent(PRINT_COMPLETE).apply {
+                    putExtra(PARAM_OPERATION_ID, operationId)
+                }
+            is PrintError ->
+                Intent(PRINT_ERROR).apply {
+                    putExtra(PARAM_OPERATION_ID, operationId)
+                    putExtra(PARAM_ERROR_CODE, printResult.errorCode)
+                    putExtra(PARAM_ERROR_MESSAGE, printResult.errorMsg)
+                }
+        }
+        sendBroadcast(printResultIntent)
+    }
+
+    suspend fun startPrintZReportInternal(intent: Intent){
+        val operationId = intent.extras?.getString(PARAM_OPERATION_ID)
+        val printResult = startPrintZReport()
+        val printResultIntent = when (printResult) {
+            is PrintComplete ->
+                Intent(PRINT_COMPLETE).apply {
+                    putExtra(PARAM_OPERATION_ID, operationId)
+                }
+            is PrintError ->
+                Intent(PRINT_ERROR).apply {
+                    putExtra(PARAM_OPERATION_ID, operationId)
+                    putExtra(PARAM_ERROR_CODE, printResult.errorCode)
+                    putExtra(PARAM_ERROR_MESSAGE, printResult.errorMsg)
                 }
         }
         sendBroadcast(printResultIntent)

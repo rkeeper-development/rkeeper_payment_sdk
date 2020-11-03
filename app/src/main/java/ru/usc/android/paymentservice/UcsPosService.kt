@@ -13,6 +13,12 @@ abstract class UcsPosService : Service() {
         const val START_REFUND = "ru.usc.android.paymentservice.START_REFUND"
         const val TRANSACTION_COMPLETE = "ru.usc.android.paymentservice.TRANSACTION_COMPLETE"
         const val TRANSACTION_ERROR = "ru.usc.android.paymentservice.TRANSACTION_ERROR"
+        const val PARAM_AMOUNT = "Amount"
+        const val PARAM_CURRENCY_CODE = "CurrencyCode"
+        const val PARAM_OPERATION_ID = "OperationId"
+        const val PARAM_TRANSACTION_ID = "TransactionId"
+        const val PARAM_ERROR_CODE = "ErrorCode"
+        const val PARAM_ERROR_MESSAGE = "ErrorMessage"
     }
 
     override fun onBind(intent: Intent): IBinder {
@@ -43,41 +49,41 @@ abstract class UcsPosService : Service() {
     }
 
     suspend fun startPaymentInternal(intent: Intent){
-        val amount = intent.extras?.get("Amount") as String?
-        val currencyCode = intent.extras?.getString("CurrencyCode")
+        val amount = intent.extras?.get(PARAM_AMOUNT) as String?
+        val currencyCode = intent.extras?.getString(PARAM_CURRENCY_CODE)
         val operationId = intent.extras?.getString("OperationId")
         val paymentResult = startPayment(amount, currencyCode)
         val paymentResultIntent = when (paymentResult) {
             is TransactionComplete ->
                 Intent(TRANSACTION_COMPLETE).apply {
-                    putExtra("OperationId", operationId)
+                    putExtra(PARAM_OPERATION_ID, operationId)
                 }
             is TransactionError ->
                 Intent(TRANSACTION_ERROR).apply {
-                    putExtra("OperationId", operationId)
-                    putExtra("ErrorCode", paymentResult.errorCode)
-                    putExtra("ErrorMessage", paymentResult.errorMsg)
+                    putExtra(PARAM_OPERATION_ID, operationId)
+                    putExtra(PARAM_ERROR_CODE, paymentResult.errorCode)
+                    putExtra(PARAM_ERROR_MESSAGE, paymentResult.errorMsg)
                 }
         }
         sendBroadcast(paymentResultIntent)
     }
 
     suspend fun startRefundInternal(intent: Intent){
-        val amount = intent.extras?.getString("Amount")
-        val currencyCode = intent.extras?.getString("CurrencyCode")
+        val amount = intent.extras?.getString(PARAM_AMOUNT)
+        val currencyCode = intent.extras?.getString(PARAM_CURRENCY_CODE)
         val operationId = intent.extras?.getString("OperationId")
         val paymentResult = startRefund(amount, currencyCode)
         val paymentResultIntent = when (paymentResult) {
             is TransactionComplete ->
                 Intent(TRANSACTION_COMPLETE).apply {
-                    putExtra("OperationId", operationId)
-                    putExtra("TransactionId", paymentResult.transactionId)
+                    putExtra(PARAM_OPERATION_ID, operationId)
+                    putExtra(PARAM_TRANSACTION_ID, paymentResult.transactionId)
                 }
             is TransactionError ->
                 Intent(TRANSACTION_ERROR).apply {
-                    putExtra("OperationId", operationId)
-                    putExtra("ErrorCode", paymentResult.errorCode)
-                    putExtra("ErrorMessage", paymentResult.errorMsg)
+                    putExtra(PARAM_OPERATION_ID, operationId)
+                    putExtra(PARAM_ERROR_CODE, paymentResult.errorCode)
+                    putExtra(PARAM_ERROR_MESSAGE, paymentResult.errorMsg)
                 }
         }
         sendBroadcast(paymentResultIntent)
