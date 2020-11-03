@@ -55,6 +55,7 @@ abstract class UcsPrintService : Service() {
     }
 
     suspend fun startPrintFiscalCheckInternal(intent: Intent){
+        val operationId = intent.extras?.get("operationId") as String?
         val order = intent.extras?.getSerializable("order") as String?
         val headers = intent.extras?.getSerializable("headers") as List<String>?
         val footers = intent.extras?.getSerializable("footers") as List<String>?
@@ -63,11 +64,14 @@ abstract class UcsPrintService : Service() {
             is PrintComplete ->
                 Intent(PRINT_COMPLETE).apply {
                     putExtra("device", "Print Terminal 2")
+                    putExtra("operationId", operationId)
                 }
             is PrintError ->
                 Intent(PRINT_ERROR).apply {
+                    putExtra("operationId", operationId)
                     putExtra("error_code", printResult.errorCode)
                     putExtra("error_message", printResult.errorMsg)
+
                 }
         }
         sendBroadcast(paymentResultIntent)
@@ -75,14 +79,16 @@ abstract class UcsPrintService : Service() {
 
     suspend fun startPrintRefundCheckInternal(intent: Intent){
         val order = intent.extras?.get("order") as String?
+        val operationId = intent.extras?.get("operationId") as String?
         val printResult = startPrintRefundCheck(order)
         val printResultIntent = when (printResult) {
             is PrintComplete ->
                 Intent(PRINT_COMPLETE).apply {
-                    putExtra("device", "Print Terminal 2")
+                    putExtra("operationId", operationId)
                 }
             is PrintError ->
                 Intent(PRINT_ERROR).apply {
+                    putExtra("operationId", operationId)
                     putExtra("error_code", printResult.errorCode)
                     putExtra("error_message", printResult.errorMsg)
                 }
