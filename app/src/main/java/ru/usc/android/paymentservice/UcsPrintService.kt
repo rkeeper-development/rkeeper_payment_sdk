@@ -55,22 +55,21 @@ abstract class UcsPrintService : Service() {
     }
 
     suspend fun startPrintFiscalCheckInternal(intent: Intent){
-        val operationId = intent.extras?.get("operationId") as String?
-        val order = intent.extras?.getSerializable("order") as String?
-        val headers = intent.extras?.getSerializable("headers") as List<String>?
-        val footers = intent.extras?.getSerializable("footers") as List<String>?
+        val operationId = intent.extras?.get("OperationId") as String?
+        val order = intent.extras?.getSerializable("Order") as String?
+        val headers = intent.extras?.getSerializable("Headers") as List<String>?
+        val footers = intent.extras?.getSerializable("Footers") as List<String>?
         val printResult = startPrintFiscalCheck(order, headers, footers)
         val paymentResultIntent = when (printResult) {
             is PrintComplete ->
                 Intent(PRINT_COMPLETE).apply {
-                    putExtra("device", "Print Terminal 2")
-                    putExtra("operationId", operationId)
+                    putExtra("OperationId", operationId)
                 }
             is PrintError ->
                 Intent(PRINT_ERROR).apply {
-                    putExtra("operationId", operationId)
-                    putExtra("error_code", printResult.errorCode)
-                    putExtra("error_message", printResult.errorMsg)
+                    putExtra("OperationId", operationId)
+                    putExtra("ErrorCode", printResult.errorCode)
+                    putExtra("ErrorMessage", printResult.errorMsg)
 
                 }
         }
@@ -84,13 +83,13 @@ abstract class UcsPrintService : Service() {
         val printResultIntent = when (printResult) {
             is PrintComplete ->
                 Intent(PRINT_COMPLETE).apply {
-                    putExtra("operationId", operationId)
+                    putExtra("OperationId", operationId)
                 }
             is PrintError ->
                 Intent(PRINT_ERROR).apply {
-                    putExtra("operationId", operationId)
-                    putExtra("error_code", printResult.errorCode)
-                    putExtra("error_message", printResult.errorMsg)
+                    putExtra("OperationId", operationId)
+                    putExtra("ErrorCode", printResult.errorCode)
+                    putExtra("ErrorMessage", printResult.errorMsg)
                 }
         }
         sendBroadcast(printResultIntent)

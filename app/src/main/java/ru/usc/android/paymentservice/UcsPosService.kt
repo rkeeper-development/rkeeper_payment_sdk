@@ -43,29 +43,29 @@ abstract class UcsPosService : Service() {
     }
 
     suspend fun startPaymentInternal(intent: Intent){
-        val amount = intent.extras?.get("amount") as String?
-        val currencyCode = intent.extras?.get("currencyCode") as String?
-        val operationId = intent.extras?.get("operationId") as String?
+        val amount = intent.extras?.get("Amount") as String?
+        val currencyCode = intent.extras?.get("CurrencyCode") as String?
+        val operationId = intent.extras?.get("OperationId") as String?
         val paymentResult = startPayment(amount, currencyCode)
         val paymentResultIntent = when (paymentResult) {
             is TransactionComplete ->
                 Intent(TRANSACTION_COMPLETE).apply {
-                    putExtra("operationId", operationId)
+                    putExtra("OperationId", operationId)
                 }
             is TransactionError ->
                 Intent(TRANSACTION_ERROR).apply {
-                    putExtra("operationId", operationId)
-                    putExtra("error_code", paymentResult.errorCode)
-                    putExtra("error_message", paymentResult.errorMsg)
+                    putExtra("OperationId", operationId)
+                    putExtra("ErrorCode", paymentResult.errorCode)
+                    putExtra("ErrorMessage", paymentResult.errorMsg)
                 }
         }
         sendBroadcast(paymentResultIntent)
     }
 
     suspend fun startRefundInternal(intent: Intent){
-        val amount = intent.extras?.get("amount") as String?
-        val currencyCode = intent.extras?.get("currencyCode") as String?
-        val operationId = intent.extras?.get("operationId") as String?
+        val amount = intent.extras?.get("Amount") as String?
+        val currencyCode = intent.extras?.get("CurrencyCode") as String?
+        val operationId = intent.extras?.get("OperationId") as String?
         val paymentResult = startRefund(amount, currencyCode)
         val paymentResultIntent = when (paymentResult) {
             is TransactionComplete ->
@@ -76,8 +76,8 @@ abstract class UcsPosService : Service() {
             is TransactionError ->
                 Intent(TRANSACTION_ERROR).apply {
                     putExtra("OperationId", operationId)
-                    putExtra("Error_code", paymentResult.errorCode)
-                    putExtra("Error_message", paymentResult.errorMsg)
+                    putExtra("ErrorCode", paymentResult.errorCode)
+                    putExtra("ErrorMessage", paymentResult.errorMsg)
                 }
         }
         sendBroadcast(paymentResultIntent)
