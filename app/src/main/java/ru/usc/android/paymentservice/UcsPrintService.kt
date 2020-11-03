@@ -55,7 +55,7 @@ abstract class UcsPrintService : Service() {
     }
 
     suspend fun startPrintFiscalCheckInternal(intent: Intent){
-        val operationId = intent.extras?.get("OperationId") as String?
+        val operationId = intent.extras?.getString("OperationId")
         val order = intent.extras?.getString("Order")
         val headers = intent.extras?.getStringArray("Headers")
         val footers = intent.extras?.getStringArray("Footers")
@@ -77,8 +77,8 @@ abstract class UcsPrintService : Service() {
     }
 
     suspend fun startPrintRefundCheckInternal(intent: Intent){
-        val order = intent.extras?.get("order") as String?
-        val operationId = intent.extras?.get("operationId") as String?
+        val order = intent.extras?.getString("order")
+        val operationId = intent.extras?.getString("operationId")
         val printResult = startPrintRefundCheck(order)
         val printResultIntent = when (printResult) {
             is PrintComplete ->
