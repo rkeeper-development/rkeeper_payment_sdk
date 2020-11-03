@@ -44,8 +44,8 @@ abstract class UcsPosService : Service() {
 
     suspend fun startPaymentInternal(intent: Intent){
         val amount = intent.extras?.get("Amount") as String?
-        val currencyCode = intent.extras?.get("CurrencyCode") as String?
-        val operationId = intent.extras?.get("OperationId") as String?
+        val currencyCode = intent.extras?.getString("CurrencyCode")
+        val operationId = intent.extras?.getString("OperationId")
         val paymentResult = startPayment(amount, currencyCode)
         val paymentResultIntent = when (paymentResult) {
             is TransactionComplete ->
@@ -63,9 +63,9 @@ abstract class UcsPosService : Service() {
     }
 
     suspend fun startRefundInternal(intent: Intent){
-        val amount = intent.extras?.get("Amount") as String?
-        val currencyCode = intent.extras?.get("CurrencyCode") as String?
-        val operationId = intent.extras?.get("OperationId") as String?
+        val amount = intent.extras?.getString("Amount")
+        val currencyCode = intent.extras?.getString("CurrencyCode")
+        val operationId = intent.extras?.getString("OperationId")
         val paymentResult = startRefund(amount, currencyCode)
         val paymentResultIntent = when (paymentResult) {
             is TransactionComplete ->

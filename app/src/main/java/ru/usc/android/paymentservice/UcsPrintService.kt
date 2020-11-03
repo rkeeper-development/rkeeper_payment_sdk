@@ -56,9 +56,9 @@ abstract class UcsPrintService : Service() {
 
     suspend fun startPrintFiscalCheckInternal(intent: Intent){
         val operationId = intent.extras?.get("OperationId") as String?
-        val order = intent.extras?.getSerializable("Order") as String?
-        val headers = intent.extras?.getSerializable("Headers") as List<String>?
-        val footers = intent.extras?.getSerializable("Footers") as List<String>?
+        val order = intent.extras?.getString("Order")
+        val headers = intent.extras?.getStringArray("Headers")
+        val footers = intent.extras?.getStringArray("Footers")
         val printResult = startPrintFiscalCheck(order, headers, footers)
         val paymentResultIntent = when (printResult) {
             is PrintComplete ->
@@ -95,7 +95,7 @@ abstract class UcsPrintService : Service() {
         sendBroadcast(printResultIntent)
     }
 
-    suspend abstract fun startPrintFiscalCheck(order: String?, headers: List<String>?, footers: List<String>?): PrintResult
+    suspend abstract fun startPrintFiscalCheck(order: String?, headers: Array<String>?, footers: Array<String>?): PrintResult
 
     suspend abstract fun startPrintRefundCheck(order: String?): PrintResult
 
