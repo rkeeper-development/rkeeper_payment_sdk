@@ -18,6 +18,7 @@ abstract class UcsPrintService : Service() {
         const val PRINT_ERROR = "ru.usc.android.paymentservice.PRINT_ERROR"
         const val PARAM_OPERATION_ID = "OperationId"
         const val PARAM_ORDER = "Order"
+        const val PARAM_NON_FISCAL_DATA = "Text"
         const val PARAM_HEADERS = "Headers"
         const val PARAM_FOOTERS = "Footers"
         const val PARAM_ERROR_CODE = "ErrorCode"
@@ -87,7 +88,7 @@ abstract class UcsPrintService : Service() {
 
     suspend fun startPrintNonFiscalDataInternal(intent: Intent){
         val operationId = intent.extras?.getString(PARAM_OPERATION_ID)
-        val text = intent.extras?.getString(PARAM_ORDER)
+        val text = intent.extras?.getString(PARAM_NON_FISCAL_DATA)
         val printResult = startPrintNonFiscalData(text)
         postProcess(operationId, printResult)
     }
