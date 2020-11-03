@@ -53,19 +53,7 @@ abstract class UcsPosService : Service() {
         val currencyCode = intent.extras?.getString(PARAM_CURRENCY_CODE)
         val operationId = intent.extras?.getString("OperationId")
         val paymentResult = startPayment(amount, currencyCode)
-        val paymentResultIntent = when (paymentResult) {
-            is TransactionComplete ->
-                Intent(TRANSACTION_COMPLETE).apply {
-                    putExtra(PARAM_OPERATION_ID, operationId)
-                }
-            is TransactionError ->
-                Intent(TRANSACTION_ERROR).apply {
-                    putExtra(PARAM_OPERATION_ID, operationId)
-                    putExtra(PARAM_ERROR_CODE, paymentResult.errorCode)
-                    putExtra(PARAM_ERROR_MESSAGE, paymentResult.errorMsg)
-                }
-        }
-        sendBroadcast(paymentResultIntent)
+        postProcess(operationId, paymentResult)
     }
 
     suspend fun startRefundInternal(intent: Intent){
@@ -73,6 +61,14 @@ abstract class UcsPosService : Service() {
         val currencyCode = intent.extras?.getString(PARAM_CURRENCY_CODE)
         val operationId = intent.extras?.getString("OperationId")
         val paymentResult = startRefund(amount, currencyCode)
+        postProcess(operationId, paymentResult)
+    }
+
+    suspend abstract fun startPayment(amount: String?, currencyCode: String?): PaymentResult
+
+    suspend abstract fun startRefund(amount: String?, currencyCode: String?): PaymentResult
+
+    private fun postProcess(operationId: String?, paymentResult: PaymentResult){
         val paymentResultIntent = when (paymentResult) {
             is TransactionComplete ->
                 Intent(TRANSACTION_COMPLETE).apply {
@@ -89,7 +85,4 @@ abstract class UcsPosService : Service() {
         sendBroadcast(paymentResultIntent)
     }
 
-    suspend abstract fun startPayment(amount: String?, currencyCode: String?): PaymentResult
-
-    suspend abstract fun startRefund(amount: String?, currencyCode: String?): PaymentResult
 }

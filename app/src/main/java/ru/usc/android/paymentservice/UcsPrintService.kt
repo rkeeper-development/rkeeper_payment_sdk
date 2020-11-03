@@ -75,87 +75,59 @@ abstract class UcsPrintService : Service() {
         val headers = intent.extras?.getStringArray(PARAM_HEADERS)
         val footers = intent.extras?.getStringArray(PARAM_FOOTERS)
         val printResult = startPrintFiscalCheck(order, headers, footers)
-        val paymentResultIntent = when (printResult) {
-            is PrintComplete ->
-                Intent(PRINT_COMPLETE).apply {
-                    putExtra(PARAM_OPERATION_ID, operationId)
-                }
-            is PrintError ->
-                Intent(PRINT_ERROR).apply {
-                    putExtra(PARAM_OPERATION_ID, operationId)
-                    putExtra(PARAM_ERROR_CODE, printResult.errorCode)
-                    putExtra(PARAM_ERROR_MESSAGE, printResult.errorMsg)
-
-                }
-        }
-        sendBroadcast(paymentResultIntent)
+        postProcess(operationId, printResult)
     }
 
     suspend fun startPrintRefundCheckInternal(intent: Intent){
         val order = intent.extras?.getString(PARAM_ORDER)
         val operationId = intent.extras?.getString(PARAM_OPERATION_ID)
         val printResult = startPrintRefundCheck(order)
-        val printResultIntent = when (printResult) {
-            is PrintComplete ->
-                Intent(PRINT_COMPLETE).apply {
-                    putExtra(PARAM_OPERATION_ID, operationId)
-                }
-            is PrintError ->
-                Intent(PRINT_ERROR).apply {
-                    putExtra(PARAM_OPERATION_ID, operationId)
-                    putExtra(PARAM_ERROR_CODE, printResult.errorCode)
-                    putExtra(PARAM_ERROR_MESSAGE, printResult.errorMsg)
-                }
-        }
-        sendBroadcast(printResultIntent)
+        postProcess(operationId, printResult)
     }
 
     suspend fun startPrintNonFiscalDataInternal(intent: Intent){
         val operationId = intent.extras?.getString(PARAM_OPERATION_ID)
-
+        val text = intent.extras?.getString(PARAM_ORDER)
+        val printResult = startPrintNonFiscalData(text)
+        postProcess(operationId, printResult)
     }
 
     suspend fun startPrintXReportInternal(intent: Intent){
         val operationId = intent.extras?.getString(PARAM_OPERATION_ID)
         val printResult = startPrintXReport()
-        val printResultIntent = when (printResult) {
-            is PrintComplete ->
-                Intent(PRINT_COMPLETE).apply {
-                    putExtra(PARAM_OPERATION_ID, operationId)
-                }
-            is PrintError ->
-                Intent(PRINT_ERROR).apply {
-                    putExtra(PARAM_OPERATION_ID, operationId)
-                    putExtra(PARAM_ERROR_CODE, printResult.errorCode)
-                    putExtra(PARAM_ERROR_MESSAGE, printResult.errorMsg)
-                }
-        }
-        sendBroadcast(printResultIntent)
+        postProcess(operationId, printResult)
     }
 
     suspend fun startPrintZReportInternal(intent: Intent){
         val operationId = intent.extras?.getString(PARAM_OPERATION_ID)
         val printResult = startPrintZReport()
-        val printResultIntent = when (printResult) {
-            is PrintComplete ->
-                Intent(PRINT_COMPLETE).apply {
-                    putExtra(PARAM_OPERATION_ID, operationId)
-                }
-            is PrintError ->
-                Intent(PRINT_ERROR).apply {
-                    putExtra(PARAM_OPERATION_ID, operationId)
-                    putExtra(PARAM_ERROR_CODE, printResult.errorCode)
-                    putExtra(PARAM_ERROR_MESSAGE, printResult.errorMsg)
-                }
-        }
-        sendBroadcast(printResultIntent)
+        postProcess(operationId, printResult)
     }
 
     suspend abstract fun startPrintFiscalCheck(order: String?, headers: Array<String>?, footers: Array<String>?): PrintResult
 
     suspend abstract fun startPrintRefundCheck(order: String?): PrintResult
 
+    suspend abstract fun startPrintNonFiscalData(text: String?): PrintResult
+
     suspend abstract fun startPrintXReport(): PrintResult
 
     suspend abstract fun startPrintZReport(): PrintResult
+
+
+    private fun postProcess(operationId: String?, printResult: PrintResult){
+        val printResultIntent = when (printResult) {
+            is PrintComplete ->
+                Intent(PRINT_COMPLETE).apply {
+                    putExtra(PARAM_OPERATION_ID, operationId)
+                }
+            is PrintError ->
+                Intent(PRINT_ERROR).apply {
+                    putExtra(PARAM_OPERATION_ID, operationId)
+                    putExtra(PARAM_ERROR_CODE, printResult.errorCode)
+                    putExtra(PARAM_ERROR_MESSAGE, printResult.errorMsg)
+                }
+        }
+        sendBroadcast(printResultIntent)
+    }
 }
