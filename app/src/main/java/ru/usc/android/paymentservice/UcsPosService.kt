@@ -51,7 +51,7 @@ abstract class UcsPosService : Service() {
     suspend fun startPaymentInternal(intent: Intent){
         val amount = intent.extras?.get(PARAM_AMOUNT) as String?
         val currencyCode = intent.extras?.getString(PARAM_CURRENCY_CODE)
-        val operationId = intent.extras?.getString("OperationId")
+        val operationId = intent.extras?.getString(PARAM_OPERATION_ID)
         val paymentResult = startPayment(amount, currencyCode)
         postProcess(operationId, paymentResult)
     }
@@ -59,7 +59,7 @@ abstract class UcsPosService : Service() {
     suspend fun startRefundInternal(intent: Intent){
         val amount = intent.extras?.getString(PARAM_AMOUNT)
         val currencyCode = intent.extras?.getString(PARAM_CURRENCY_CODE)
-        val operationId = intent.extras?.getString("OperationId")
+        val operationId = intent.extras?.getString(PARAM_OPERATION_ID)
         val paymentResult = startRefund(amount, currencyCode)
         postProcess(operationId, paymentResult)
     }
