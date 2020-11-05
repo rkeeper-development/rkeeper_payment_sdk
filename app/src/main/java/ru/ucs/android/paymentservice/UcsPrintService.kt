@@ -43,12 +43,14 @@ abstract class UcsPrintService : Service() {
             Log.d("paymentmodule", action.toString())
             when (action) {
                 START_PRINT_PAYMENT_CHECK -> {
+                    Log.d("paymentmodule", "payment check")
                     GlobalScope.launch {
                         startPrintFiscalCheckInternal(it)
                         stopSelfResult(startId)
                     }
                 }
                 START_PRINT_REFUND_CHECK -> {
+                    Log.d("paymentmodule", "refund check")
                     GlobalScope.launch {
                         startPrintRefundCheckInternal(it)
                         stopSelfResult(startId)
