@@ -1,4 +1,4 @@
-package ru.usc.android.paymentservice
+package ru.ucs.android.paymentservice
 
 data class UcsCashier(
     val userGUID: String,

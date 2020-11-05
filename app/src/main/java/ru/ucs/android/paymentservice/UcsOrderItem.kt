@@ -1,4 +1,4 @@
-package ru.usc.android.paymentservice
+package ru.ucs.android.paymentservice
 
 data class UcsOrderItem(
     val orderDetailGUID: String,

@@ -1,7 +1,8 @@
-package ru.usc.android.paymentservice
+package ru.ucs.android.paymentservice
 
 import android.app.Service
 import android.content.Intent
+import android.os.Binder
 import android.os.IBinder
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -9,20 +10,26 @@ import kotlinx.coroutines.launch
 abstract class UcsPosService : Service() {
 
     companion object {
-        const val START_PAYMENT = "ru.usc.android.paymentservice.START_PAYMENT"
-        const val START_REFUND = "ru.usc.android.paymentservice.START_REFUND"
-        const val TRANSACTION_COMPLETE = "ru.usc.android.paymentservice.TRANSACTION_COMPLETE"
-        const val TRANSACTION_ERROR = "ru.usc.android.paymentservice.TRANSACTION_ERROR"
+        const val START_PAYMENT = "ru.ucs.android.paymentservice.START_PAYMENT"
+        const val START_REFUND = "ru.ucs.android.paymentservice.START_REFUND"
+        const val START_EXTERNAL_ACTIVITY = "ru.ucs.android.paymentservice.START_EXTERNAL_ACTIVITY"
+        const val TRANSACTION_COMPLETE = "ru.ucs.android.paymentservice.TRANSACTION_COMPLETE"
+        const val TRANSACTION_ERROR = "ru.ucs.android.paymentservice.TRANSACTION_ERROR"
         const val PARAM_AMOUNT = "Amount"
         const val PARAM_CURRENCY_CODE = "CurrencyCode"
         const val PARAM_OPERATION_ID = "OperationId"
         const val PARAM_TRANSACTION_ID = "TransactionId"
         const val PARAM_ERROR_CODE = "ErrorCode"
         const val PARAM_ERROR_MESSAGE = "ErrorMessage"
+        const val PARAM_EXTERNAL_ACTIVITY_INTENT = "ExternalActivityIntent"
+    }
+
+    inner class UcsPosServiceBinder : Binder() {
+        fun getService() = this@UcsPosService
     }
 
     override fun onBind(intent: Intent): IBinder {
-        TODO("Return the communication channel to the service.")
+        return UcsPosServiceBinder()
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -46,6 +53,13 @@ abstract class UcsPosService : Service() {
         }
 
         return super.onStartCommand(intent, flags, startId)
+    }
+
+    fun onStartActivity(activityIntent: Intent){
+        val intent = Intent(START_EXTERNAL_ACTIVITY).apply {
+            putExtra(PARAM_EXTERNAL_ACTIVITY_INTENT, activityIntent)
+        }
+        sendBroadcast(intent)
     }
 
     suspend fun startPaymentInternal(intent: Intent){

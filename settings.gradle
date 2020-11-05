@@ -1,2 +1,2 @@
 include ':app'
-rootProject.name = "USC Payment Service"
+rootProject.name = "UCS Payment Service"

@@ -1,7 +1,8 @@
-package ru.usc.android.paymentservice
+package ru.ucs.android.paymentservice
 
 import android.app.Service
 import android.content.Intent
+import android.os.Binder
 import android.os.IBinder
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -9,13 +10,14 @@ import kotlinx.coroutines.launch
 abstract class UcsPrintService : Service() {
 
     companion object {
-        const val START_PRINT_PAYMENT_CHECK = "ru.usc.android.paymentservice.PRINT_CHECK"
-        const val START_PRINT_REFUND_CHECK = "ru.usc.android.paymentservice.PRINT_CHECK_REFUND"
-        const val START_PRINT_NONFISCAL = "ru.usc.android.paymentservice.PRINT_NONFISCAL"
-        const val START_PRINT_XREPORT = "ru.usc.android.paymentservice.PRINT_XREPORT"
-        const val START_PRINT_ZREPORT = "ru.usc.android.paymentservice.PRINT_ZREPORT"
-        const val PRINT_COMPLETE = "ru.usc.android.paymentservice.PRINT_COMPLETE"
-        const val PRINT_ERROR = "ru.usc.android.paymentservice.PRINT_ERROR"
+        const val START_PRINT_PAYMENT_CHECK = "ru.ucs.android.paymentservice.PRINT_CHECK"
+        const val START_PRINT_REFUND_CHECK = "ru.ucs.android.paymentservice.PRINT_CHECK_REFUND"
+        const val START_PRINT_NONFISCAL = "ru.ucs.android.paymentservice.PRINT_NONFISCAL"
+        const val START_PRINT_XREPORT = "ru.ucs.android.paymentservice.PRINT_XREPORT"
+        const val START_PRINT_ZREPORT = "ru.ucs.android.paymentservice.PRINT_ZREPORT"
+        const val START_EXTERNAL_ACTIVITY = "ru.ucs.android.paymentservice.START_EXTERNAL_ACTIVITY"
+        const val PRINT_COMPLETE = "ru.ucs.android.paymentservice.PRINT_COMPLETE"
+        const val PRINT_ERROR = "ru.ucs.android.paymentservice.PRINT_ERROR"
         const val PARAM_OPERATION_ID = "OperationId"
         const val PARAM_ORDER = "Order"
         const val PARAM_NON_FISCAL_DATA = "Text"
@@ -23,10 +25,15 @@ abstract class UcsPrintService : Service() {
         const val PARAM_FOOTERS = "Footers"
         const val PARAM_ERROR_CODE = "ErrorCode"
         const val PARAM_ERROR_MESSAGE = "ErrorMessage"
+        const val PARAM_EXTERNAL_ACTIVITY_INTENT = "ExternalActivityIntent"
+    }
+
+    inner class UcsPrintServiceBinder : Binder() {
+        fun getService() = this@UcsPrintService
     }
 
     override fun onBind(intent: Intent): IBinder {
-        TODO("Return the communication channel to the service.")
+        return UcsPrintServiceBinder()
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -68,6 +75,13 @@ abstract class UcsPrintService : Service() {
         }
 
         return super.onStartCommand(intent, flags, startId)
+    }
+
+    suspend fun onStartActivity(activityIntent: Intent){
+        val intent = Intent(START_EXTERNAL_ACTIVITY).apply {
+            putExtra(PARAM_EXTERNAL_ACTIVITY_INTENT, activityIntent)
+        }
+        sendBroadcast(intent)
     }
 
     suspend fun startPrintFiscalCheckInternal(intent: Intent){
