@@ -4,6 +4,7 @@ import android.app.Service
 import android.content.Intent
 import android.os.Binder
 import android.os.IBinder
+import android.util.Log
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 
@@ -35,6 +36,7 @@ abstract class UcsPosService : Service() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         intent?.let {
             val action = it.action
+            Log.d("paymentmodule", action.toString())
             when (action) {
                 START_PAYMENT -> {
                     GlobalScope.launch {

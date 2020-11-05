@@ -40,6 +40,7 @@ abstract class UcsPrintService : Service() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         intent?.let {
             val action = it.action
+            Log.d("paymentmodule", action.toString())
             when (action) {
                 START_PRINT_PAYMENT_CHECK -> {
                     GlobalScope.launch {
@@ -86,7 +87,7 @@ abstract class UcsPrintService : Service() {
     }
 
     suspend fun startPrintFiscalCheckInternal(intent: Intent){
-        Log.d("printService", "startPrintFiscalCheckInternal()")
+        Log.d("paymentmodule", "startPrintFiscalCheckInternal()")
         val operationId = intent.extras?.getString(PARAM_OPERATION_ID)
         val order = intent.extras?.getString(PARAM_ORDER)
         val headers = intent.extras?.getStringArray(PARAM_HEADERS)
@@ -96,7 +97,7 @@ abstract class UcsPrintService : Service() {
     }
 
     suspend fun startPrintRefundCheckInternal(intent: Intent){
-        Log.d("printService", "startPrintRefundCheckInternal()")
+        Log.d("paymentmodule", "startPrintRefundCheckInternal()")
         val order = intent.extras?.getString(PARAM_ORDER)
         val headers = intent.extras?.getStringArray(PARAM_HEADERS)
         val footers = intent.extras?.getStringArray(PARAM_FOOTERS)
