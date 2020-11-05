@@ -4,6 +4,7 @@ import android.app.Service
 import android.content.Intent
 import android.os.Binder
 import android.os.IBinder
+import android.util.Log
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 
@@ -85,6 +86,7 @@ abstract class UcsPrintService : Service() {
     }
 
     suspend fun startPrintFiscalCheckInternal(intent: Intent){
+        Log.d("printService", "startPrintFiscalCheckInternal()")
         val operationId = intent.extras?.getString(PARAM_OPERATION_ID)
         val order = intent.extras?.getString(PARAM_ORDER)
         val headers = intent.extras?.getStringArray(PARAM_HEADERS)
@@ -94,13 +96,17 @@ abstract class UcsPrintService : Service() {
     }
 
     suspend fun startPrintRefundCheckInternal(intent: Intent){
+        Log.d("printService", "startPrintRefundCheckInternal()")
         val order = intent.extras?.getString(PARAM_ORDER)
+        val headers = intent.extras?.getStringArray(PARAM_HEADERS)
+        val footers = intent.extras?.getStringArray(PARAM_FOOTERS)
         val operationId = intent.extras?.getString(PARAM_OPERATION_ID)
-        val printResult = startPrintRefundCheck(order)
+        val printResult = startPrintRefundCheck(order, headers, footers)
         postProcess(operationId, printResult)
     }
 
     suspend fun startPrintNonFiscalDataInternal(intent: Intent){
+        Log.d("printService", "startPrintNonFiscalDataInternal()")
         val operationId = intent.extras?.getString(PARAM_OPERATION_ID)
         val text = intent.extras?.getString(PARAM_NON_FISCAL_DATA)
         val printResult = startPrintNonFiscalData(text)
@@ -121,7 +127,7 @@ abstract class UcsPrintService : Service() {
 
     suspend abstract fun startPrintFiscalCheck(order: String?, headers: Array<String>?, footers: Array<String>?): PrintResult
 
-    suspend abstract fun startPrintRefundCheck(order: String?): PrintResult
+    suspend abstract fun startPrintRefundCheck(order: String?, headers: Array<String>?, footers: Array<String>?): PrintResult
 
     suspend abstract fun startPrintNonFiscalData(text: String?): PrintResult
 
