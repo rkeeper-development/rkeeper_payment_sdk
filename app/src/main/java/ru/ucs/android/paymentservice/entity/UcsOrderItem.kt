@@ -1,11 +1,37 @@
 package ru.ucs.android.paymentservice.entity
 
+/**
+ * Товарные позиции в заказе
+ */
 data class UcsOrderItem(
-    val orderDetailGUID: String,
+    /**
+     * Уникальный идентификатор позиции заказа
+     */
+    val orderItemGUID: String,
+
+    /**
+     * Наименование предмета расчета(товара)
+     */
     val name: String,
+
+    /**
+     * Стоимость единицы предмета расчета
+     */
     val cost: Double,
+
+    /**
+     * Количество предмета расчета
+     */
     val quantity: Double,
+
+    val discounts: List<UcsDiscount>?,
+
+    val units: String,
+
     val amount: Double,
-    val tax: UcsTax,
-    val discounts: List<UcsDiscount>?
+
+    /**
+     * Сущность с налогом на данную позицию
+     */
+    val tax:UcsTax
 )
