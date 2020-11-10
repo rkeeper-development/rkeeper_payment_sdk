@@ -105,11 +105,10 @@ abstract class UcsPrintService : Service() {
 
     suspend fun startPrintRefundCheckInternal(intent: Intent){
         Log.d("paymentmodule", "startPrintRefundCheckInternal()")
-        val order = intent.extras?.getString(PARAM_ORDER)
-        val headers = intent.extras?.getStringArray(PARAM_HEADERS)
-        val footers = intent.extras?.getStringArray(PARAM_FOOTERS)
+        val fiscalDocument = intent.extras?.getString(PARAM_FISCAL_DOCUMENT)
+        val cashier = intent.extras?.getString(PARAM_CASHIER)
         val operationId = intent.extras?.getString(PARAM_OPERATION_ID)
-        val printResult = startPrintRefundCheck(order, headers, footers)
+        val printResult = startPrintRefundCheck(fiscalDocument, cashier)
         postProcess(operationId, printResult)
     }
 
@@ -138,7 +137,7 @@ abstract class UcsPrintService : Service() {
 
     suspend abstract fun startPrintFiscalCheck(order: String?, headers: Array<String>?, footers: Array<String>?): PrintResult
 
-    suspend abstract fun startPrintRefundCheck(order: String?, headers: Array<String>?, footers: Array<String>?): PrintResult
+    suspend abstract fun startPrintRefundCheck(fiscalDocument: String?, cashier: String?): PrintResult
 
     suspend abstract fun startPrintNonFiscalData(text: String?, cashier: String?): PrintResult
 
