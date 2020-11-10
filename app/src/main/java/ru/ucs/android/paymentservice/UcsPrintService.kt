@@ -20,7 +20,11 @@ abstract class UcsPrintService : Service() {
         const val PRINT_COMPLETE = "ru.ucs.android.paymentservice.PRINT_COMPLETE"
         const val PRINT_ERROR = "ru.ucs.android.paymentservice.PRINT_ERROR"
         const val PARAM_OPERATION_ID = "OperationId"
+        const val PARAM_FISCAL_DOCUMENT = "FiscalDocument"
+        const val PARAM_TRANSACTION_ID = "TransactionId"
+        const val PARAM_SHIFT_NUMBER = "ShiftNumber"
         const val PARAM_ORDER = "Order"
+        const val PARAM_CASHIER = "Cashier"
         const val PARAM_NON_FISCAL_DATA = "Text"
         const val PARAM_HEADERS = "Headers"
         const val PARAM_FOOTERS = "Footers"
@@ -112,7 +116,8 @@ abstract class UcsPrintService : Service() {
         Log.d("printService", "startPrintNonFiscalDataInternal()")
         val operationId = intent.extras?.getString(PARAM_OPERATION_ID)
         val text = intent.extras?.getString(PARAM_NON_FISCAL_DATA)
-        val printResult = startPrintNonFiscalData(text)
+        val cashier = intent.extras?.getString(PARAM_CASHIER)
+        val printResult = startPrintNonFiscalData(text, cashier)
         postProcess(operationId, printResult)
     }
 
@@ -132,7 +137,7 @@ abstract class UcsPrintService : Service() {
 
     suspend abstract fun startPrintRefundCheck(order: String?, headers: Array<String>?, footers: Array<String>?): PrintResult
 
-    suspend abstract fun startPrintNonFiscalData(text: String?): PrintResult
+    suspend abstract fun startPrintNonFiscalData(text: String?, cashier: String?): PrintResult
 
     suspend abstract fun startPrintXReport(): PrintResult
 
@@ -144,6 +149,9 @@ abstract class UcsPrintService : Service() {
             is PrintComplete ->
                 Intent(PRINT_COMPLETE).apply {
                     putExtra(PARAM_OPERATION_ID, operationId)
+                    putExtra(PARAM_FISCAL_DOCUMENT, printResult.fiscalDocument)
+                    putExtra(PARAM_TRANSACTION_ID, printResult.transactionId)
+                    putExtra(PARAM_SHIFT_NUMBER, printResult.shiftNumber)
                 }
             is PrintError ->
                 Intent(PRINT_ERROR).apply {
