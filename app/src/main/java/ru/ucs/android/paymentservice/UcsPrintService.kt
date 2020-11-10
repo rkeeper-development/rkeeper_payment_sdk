@@ -17,6 +17,7 @@ abstract class UcsPrintService : Service() {
         const val START_PRINT_XREPORT = "ru.ucs.android.paymentservice.PRINT_XREPORT"
         const val START_PRINT_ZREPORT = "ru.ucs.android.paymentservice.PRINT_ZREPORT"
         const val START_EXTERNAL_ACTIVITY = "ru.ucs.android.paymentservice.START_EXTERNAL_ACTIVITY"
+        const val PRINT_PROCESS = "ru.ucs.android.paymentservice.PRINT_PROCESS"
         const val PRINT_COMPLETE = "ru.ucs.android.paymentservice.PRINT_COMPLETE"
         const val PRINT_ERROR = "ru.ucs.android.paymentservice.PRINT_ERROR"
         const val PARAM_OPERATION_ID = "OperationId"
@@ -123,13 +124,15 @@ abstract class UcsPrintService : Service() {
 
     suspend fun startPrintXReportInternal(intent: Intent){
         val operationId = intent.extras?.getString(PARAM_OPERATION_ID)
-        val printResult = startPrintXReport()
+        val cashier = intent.extras?.getString(PARAM_CASHIER)
+        val printResult = startPrintXReport(cashier)
         postProcess(operationId, printResult)
     }
 
     suspend fun startPrintZReportInternal(intent: Intent){
         val operationId = intent.extras?.getString(PARAM_OPERATION_ID)
-        val printResult = startPrintZReport()
+        val cashier = intent.extras?.getString(PARAM_CASHIER)
+        val printResult = startPrintZReport(cashier)
         postProcess(operationId, printResult)
     }
 
@@ -139,13 +142,16 @@ abstract class UcsPrintService : Service() {
 
     suspend abstract fun startPrintNonFiscalData(text: String?, cashier: String?): PrintResult
 
-    suspend abstract fun startPrintXReport(): PrintResult
+    suspend abstract fun startPrintXReport(cashier: String?): PrintResult
 
-    suspend abstract fun startPrintZReport(): PrintResult
-
+    suspend abstract fun startPrintZReport(cashier: String?): PrintResult
 
     private fun postProcess(operationId: String?, printResult: PrintResult){
         val printResultIntent = when (printResult) {
+            is PrintProcess ->
+                Intent(PRINT_PROCESS).apply {
+                    putExtra(PARAM_OPERATION_ID, operationId)
+                }
             is PrintComplete ->
                 Intent(PRINT_COMPLETE).apply {
                     putExtra(PARAM_OPERATION_ID, operationId)
