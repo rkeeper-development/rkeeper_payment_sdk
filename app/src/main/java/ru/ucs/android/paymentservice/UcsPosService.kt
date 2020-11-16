@@ -16,7 +16,10 @@ abstract class UcsPosService : Service() {
         const val START_EXTERNAL_ACTIVITY = "ru.ucs.android.paymentservice.START_EXTERNAL_ACTIVITY"
         const val TRANSACTION_COMPLETE = "ru.ucs.android.paymentservice.TRANSACTION_COMPLETE"
         const val TRANSACTION_ERROR = "ru.ucs.android.paymentservice.TRANSACTION_ERROR"
+        const val PRINT_CHECK = "ru.ucs.android.paymentservice.START_PRINT_CHECK"
         const val PARAM_AMOUNT = "Amount"
+        const val PARAM_CHECK_DATA = "CheckData"
+        const val PARAM_CHECK_COPIES = "CheckCopies"
         const val PARAM_CURRENCY_CODE = "CurrencyCode"
         const val PARAM_OPERATION_ID = "OperationId"
         const val PARAM_TRANSACTION_ID = "TransactionId"
@@ -86,6 +89,11 @@ abstract class UcsPosService : Service() {
 
     private fun postProcess(operationId: String?, paymentResult: PaymentResult){
         val paymentResultIntent = when (paymentResult) {
+            is PrintCheck ->
+                Intent(PRINT_CHECK).apply {
+                    putExtra(PARAM_CHECK_DATA, paymentResult.check)
+                    putExtra(PARAM_CHECK_COPIES, paymentResult.copies)
+                }
             is TransactionComplete ->
                 Intent(TRANSACTION_COMPLETE).apply {
                     putExtra(PARAM_OPERATION_ID, operationId)
