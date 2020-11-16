@@ -79,13 +79,14 @@ abstract class UcsPosService : Service() {
         val amount = intent.extras?.getString(PARAM_AMOUNT)
         val currencyCode = intent.extras?.getString(PARAM_CURRENCY_CODE)
         val operationId = intent.extras?.getString(PARAM_OPERATION_ID)
-        val paymentResult = startRefund(amount, currencyCode)
+        val transactionId = intent.extras?.getString(PARAM_TRANSACTION_ID)
+        val paymentResult = startRefund(amount, currencyCode, transactionId)
         postProcess(operationId, paymentResult)
     }
 
     suspend abstract fun startPayment(amount: String?, currencyCode: String?): PaymentResult
 
-    suspend abstract fun startRefund(amount: String?, currencyCode: String?): PaymentResult
+    suspend abstract fun startRefund(amount: String?, currencyCode: String?, transactionId: String?): PaymentResult
 
     private fun postProcess(operationId: String?, paymentResult: PaymentResult){
         val paymentResultIntent = when (paymentResult) {
