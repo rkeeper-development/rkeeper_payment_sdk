@@ -7,17 +7,21 @@ import android.os.IBinder
 import android.util.Log
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import javax.microedition.khronos.opengles.GL
 
 abstract class UcsPosService : Service() {
 
     companion object {
         const val START_PAYMENT = "ru.ucs.android.paymentservice.START_PAYMENT"
         const val START_REFUND = "ru.ucs.android.paymentservice.START_REFUND"
+        const val START_RECONCILIATION = "ru.ucs.android.paymentservice.START_RECONCILIATION"
+        const val PRINT_COMPLETE = "ru.ucs.android.paymentservice.PRINT_COMPLETE"
         const val START_EXTERNAL_ACTIVITY = "ru.ucs.android.paymentservice.START_EXTERNAL_ACTIVITY"
         const val TRANSACTION_COMPLETE = "ru.ucs.android.paymentservice.TRANSACTION_COMPLETE"
         const val TRANSACTION_ERROR = "ru.ucs.android.paymentservice.TRANSACTION_ERROR"
         const val PRINT_CHECK = "ru.ucs.android.paymentservice.START_PRINT_CHECK"
         const val PARAM_AMOUNT = "Amount"
+        const val PARAM_PRINT_IS_FINISHED = "PrintIsFinished"
         const val PARAM_CHECK_DATA = "CheckData"
         const val PARAM_CHECK_COPIES = "CheckCopies"
         const val PARAM_CURRENCY_CODE = "CurrencyCode"
@@ -39,20 +43,27 @@ abstract class UcsPosService : Service() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         intent?.let {
             val action = it.action
-            Log.d("paymentmodule", action.toString())
             when (action) {
-                START_PAYMENT -> {
+                START_PAYMENT ->
                     GlobalScope.launch {
                         startPaymentInternal(it)
                         stopSelfResult(startId)
                     }
-                }
-                START_REFUND -> {
+                START_REFUND ->
                     GlobalScope.launch {
                         startRefundInternal(it)
                         stopSelfResult(startId)
                     }
-                }
+                START_RECONCILIATION ->
+                    GlobalScope.launch {
+                        startReconciliationInternal(intent)
+                        stopSelfResult(startId)
+                    }
+                PRINT_COMPLETE ->
+                    GlobalScope.launch {
+                        printCompleteInternal(intent)
+                        stopSelfResult(startId)
+                    }
                 else -> null
             }
         }
@@ -84,9 +95,26 @@ abstract class UcsPosService : Service() {
         postProcess(operationId, paymentResult)
     }
 
+    suspend fun startReconciliationInternal(intent: Intent){
+        val operationId = intent.extras?.getString(PARAM_OPERATION_ID)
+        val paymentResult = startReconciliation()
+        postProcess(operationId, paymentResult)
+    }
+
+    suspend fun printCompleteInternal(intent: Intent){
+        val operationId = intent.extras?.getString(PARAM_OPERATION_ID)
+        val printIsFinished = intent.extras?.getBoolean(PARAM_PRINT_IS_FINISHED)
+        val paymentResult = printFinished(printIsFinished)
+        postProcess(operationId, paymentResult)
+    }
+
     suspend abstract fun startPayment(amount: String?, currencyCode: String?): PaymentResult
 
     suspend abstract fun startRefund(amount: String?, currencyCode: String?, transactionId: String?): PaymentResult
+
+    suspend abstract fun startReconciliation(): PaymentResult
+
+    suspend abstract fun printFinished(isFinished: Boolean?): PaymentResult
 
     private fun postProcess(operationId: String?, paymentResult: PaymentResult){
         val paymentResultIntent = when (paymentResult) {
