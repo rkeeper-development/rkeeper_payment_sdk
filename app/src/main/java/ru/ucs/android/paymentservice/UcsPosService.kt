@@ -12,6 +12,7 @@ import javax.microedition.khronos.opengles.GL
 abstract class UcsPosService : Service() {
 
     companion object {
+        const val START_UPDATE_STATUS = "ru.ucs.android.paymentservice.UPDATE_STATUS"
         const val START_PAYMENT = "ru.ucs.android.paymentservice.START_PAYMENT"
         const val START_REFUND = "ru.ucs.android.paymentservice.START_REFUND"
         const val START_RECONCILIATION = "ru.ucs.android.paymentservice.START_RECONCILIATION"
@@ -19,9 +20,13 @@ abstract class UcsPosService : Service() {
         const val START_EXTERNAL_ACTIVITY = "ru.ucs.android.paymentservice.START_EXTERNAL_ACTIVITY"
         const val TRANSACTION_COMPLETE = "ru.ucs.android.paymentservice.TRANSACTION_COMPLETE"
         const val TRANSACTION_ERROR = "ru.ucs.android.paymentservice.TRANSACTION_ERROR"
+        const val UPDATE_STATUS_COMPLETE = "ru.ucs.android.paymentservice.UPDATE_STATUS_COMPLETE"
         const val PRINT_CHECK = "ru.ucs.android.paymentservice.START_PRINT_CHECK"
         const val PARAM_AMOUNT = "Amount"
         const val PARAM_PRINT_IS_FINISHED = "PrintIsFinished"
+        const val PARAM_UPDATE_STATUS_SUCCESS = "Status"
+        const val PARAM_UPDATE_STATUS_MESSAGE = "StatusMessage"
+        const val PARAM_UPDATE_STATUS_CODE = "StatusCode"
         const val PARAM_CHECK_DATA = "CheckData"
         const val PARAM_CHECK_COPIES = "CheckCopies"
         const val PARAM_CURRENCY_CODE = "CurrencyCode"
@@ -44,6 +49,11 @@ abstract class UcsPosService : Service() {
         intent?.let {
             val action = it.action
             when (action) {
+                START_UPDATE_STATUS ->
+                    GlobalScope.launch {
+                        startGetStatusInternal(it)
+                        stopSelfResult(startId)
+                    }
                 START_PAYMENT ->
                     GlobalScope.launch {
                         startPaymentInternal(it)
@@ -78,6 +88,12 @@ abstract class UcsPosService : Service() {
         sendBroadcast(intent)
     }
 
+    suspend fun startGetStatusInternal(intent: Intent){
+        val operationId = intent.extras?.getString(PARAM_OPERATION_ID)
+        val paymentResult = getStatus()
+        postProcess(operationId, paymentResult)
+    }
+
     suspend fun startPaymentInternal(intent: Intent){
         val amount = intent.extras?.get(PARAM_AMOUNT) as String?
         val currencyCode = intent.extras?.getString(PARAM_CURRENCY_CODE)
@@ -108,6 +124,8 @@ abstract class UcsPosService : Service() {
         postProcess(operationId, paymentResult)
     }
 
+    suspend abstract fun getStatus(): PaymentResult
+
     suspend abstract fun startPayment(amount: String?, currencyCode: String?): PaymentResult
 
     suspend abstract fun startRefund(amount: String?, currencyCode: String?, transactionId: String?): PaymentResult
@@ -118,6 +136,13 @@ abstract class UcsPosService : Service() {
 
     private fun postProcess(operationId: String?, paymentResult: PaymentResult){
         val paymentResultIntent = when (paymentResult) {
+            is UpdateStatusComplete ->
+                Intent(UPDATE_STATUS_COMPLETE).apply {
+                    putExtra(PARAM_OPERATION_ID, operationId)
+                    putExtra(PARAM_UPDATE_STATUS_SUCCESS, paymentResult.isSuccess)
+                    putExtra(PARAM_UPDATE_STATUS_CODE, paymentResult.status)
+                    putExtra(PARAM_UPDATE_STATUS_MESSAGE, paymentResult.message)
+                }
             is PrintCheck ->
                 Intent(PRINT_CHECK).apply {
                     putExtra(PARAM_CHECK_DATA, paymentResult.check)

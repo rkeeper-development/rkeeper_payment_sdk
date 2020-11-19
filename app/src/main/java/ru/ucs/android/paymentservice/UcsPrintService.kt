@@ -16,11 +16,18 @@ abstract class UcsPrintService : Service() {
         const val START_PRINT_NONFISCAL = "ru.ucs.android.paymentservice.PRINT_NONFISCAL"
         const val START_PRINT_XREPORT = "ru.ucs.android.paymentservice.PRINT_XREPORT"
         const val START_PRINT_ZREPORT = "ru.ucs.android.paymentservice.PRINT_ZREPORT"
+        const val START_GET_STATUS = "ru.ucs.android.paymentservice.GET_STATUS"
         const val START_EXTERNAL_ACTIVITY = "ru.ucs.android.paymentservice.START_EXTERNAL_ACTIVITY"
+        const val GET_STATUS_COMPLETE = "ru.ucs.android.paymentservice.GET_STATUS_COMPLETE"
         const val PRINT_PROCESS = "ru.ucs.android.paymentservice.PRINT_PROCESS"
         const val PRINT_COMPLETE = "ru.ucs.android.paymentservice.PRINT_COMPLETE"
         const val PRINT_ERROR = "ru.ucs.android.paymentservice.PRINT_ERROR"
         const val PARAM_OPERATION_ID = "OperationId"
+        const val PARAM_REG_NUMBER = "RegistrationNumber"
+        const val PARAM_SHIFT_STATUS = "ShiftStatus"
+        const val PARAM_LAST_FISCAL_DOCUMENT = "LastFiscalDocument"
+        const val PARAM_FACTORY_NUMBER = "FactoryNumber"
+        const val PARAM_OFD_INFO = "OfdInfo"
         const val PARAM_FISCAL_DOCUMENT = "FiscalDocument"
         const val PARAM_TRANSACTION_ID = "TransactionId"
         const val PARAM_SHIFT_NUMBER = "ShiftNumber"
@@ -45,22 +52,22 @@ abstract class UcsPrintService : Service() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         intent?.let {
             val action = it.action
-            Log.d("paymentmodule", action.toString())
             when (action) {
-                START_PRINT_PAYMENT_CHECK -> {
-                    Log.d("paymentmodule", "payment check")
+                START_PRINT_PAYMENT_CHECK ->
                     GlobalScope.launch {
                         startPrintFiscalCheckInternal(it)
                         stopSelfResult(startId)
                     }
-                }
-                START_PRINT_REFUND_CHECK -> {
-                    Log.d("paymentmodule", "refund check")
+                START_GET_STATUS ->
+                    GlobalScope.launch {
+                        startGetStatusInternal(it)
+                        stopSelfResult(startId)
+                    }
+                START_PRINT_REFUND_CHECK ->
                     GlobalScope.launch {
                         startPrintRefundCheckInternal(it)
                         stopSelfResult(startId)
                     }
-                }
                 START_PRINT_NONFISCAL -> {
                     GlobalScope.launch {
                         startPrintNonFiscalDataInternal(it)
@@ -91,6 +98,12 @@ abstract class UcsPrintService : Service() {
             putExtra(PARAM_EXTERNAL_ACTIVITY_INTENT, activityIntent)
         }
         sendBroadcast(intent)
+    }
+
+    suspend fun startGetStatusInternal(intent: Intent){
+        val operationId = intent.extras?.getString(PARAM_OPERATION_ID)
+        val printResult = getStatus()
+        postProcess(operationId, printResult)
     }
 
     suspend fun startPrintFiscalCheckInternal(intent: Intent){
@@ -135,6 +148,8 @@ abstract class UcsPrintService : Service() {
         postProcess(operationId, printResult)
     }
 
+    suspend abstract fun getStatus(): PrintResult
+
     suspend abstract fun startPrintFiscalCheck(order: String?, headers: Array<String>?, footers: Array<String>?): PrintResult
 
     suspend abstract fun startPrintRefundCheck(fiscalDocument: String?, cashier: String?): PrintResult
@@ -150,6 +165,15 @@ abstract class UcsPrintService : Service() {
             is PrintProcess ->
                 Intent(PRINT_PROCESS).apply {
                     putExtra(PARAM_OPERATION_ID, operationId)
+                }
+            is GetStatusComplete ->
+                Intent(GET_STATUS_COMPLETE).apply {
+                    putExtra(PARAM_OPERATION_ID, operationId)
+                    putExtra(PARAM_FACTORY_NUMBER, printResult.factoryNumber)
+                    putExtra(PARAM_LAST_FISCAL_DOCUMENT, printResult.lastDocNumber)
+                    putExtra(PARAM_SHIFT_STATUS, printResult.shiftStatus)
+                    putExtra(PARAM_SHIFT_NUMBER, printResult.shiftNumber)
+                    putExtra(PARAM_OFD_INFO, printResult.ofdInfo)
                 }
             is PrintComplete ->
                 Intent(PRINT_COMPLETE).apply {
