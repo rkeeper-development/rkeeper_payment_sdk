@@ -30,6 +30,11 @@ data class UcsOrder(
     val discounts: List<UcsDiscount>?,
 
     /**
+     * Тип оплаты: cash/card
+     */
+    val paymentType: String,
+
+    /**
      * Общая стоимость заказа
      */
     val amount: Double
