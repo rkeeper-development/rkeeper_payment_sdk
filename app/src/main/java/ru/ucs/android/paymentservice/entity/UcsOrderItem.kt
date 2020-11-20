@@ -10,6 +10,11 @@ data class UcsOrderItem(
     val orderItemGUID: String,
 
     /**
+     * Код
+     */
+    val code: String,
+
+    /**
      * Наименование предмета расчета(товара)
      */
     val name: String,
