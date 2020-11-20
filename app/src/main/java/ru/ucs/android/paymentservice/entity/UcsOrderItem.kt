@@ -15,6 +15,16 @@ data class UcsOrderItem(
     val name: String,
 
     /**
+     * Тип позиции:
+     *    DISH       = 1;
+     *    COMBO      = 2;
+     *    COMPONENT  = 3;
+     *    COMBOMODI  = 4;
+     *    MODI       = 5;
+     */
+    val type: Int?,
+
+    /**
      * Стоимость единицы предмета расчета
      */
     val cost: Double,
