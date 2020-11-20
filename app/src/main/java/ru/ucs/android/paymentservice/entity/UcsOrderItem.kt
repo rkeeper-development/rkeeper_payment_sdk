@@ -31,6 +31,11 @@ data class UcsOrderItem(
     val amount: Double,
 
     /**
+     * Комментарий
+     */
+    val comment: String?,
+
+    /**
      * Сущность с налогом на данную позицию
      */
     val tax:UcsTax
