@@ -4,6 +4,7 @@ package ru.ucs.android.paymentservice.entity
  * Товарные позиции в заказе
  */
 data class UcsOrderItem(
+
     /**
      * Уникальный идентификатор позиции заказа
      */
@@ -12,7 +13,12 @@ data class UcsOrderItem(
     /**
      * Код
      */
-    val code: String,
+    val code: String?,
+
+    /**
+     * Номер
+     */
+    val dignum: Int?,
 
     /**
      * Наименование предмета расчета(товара)
@@ -39,10 +45,20 @@ data class UcsOrderItem(
      */
     val quantity: Double,
 
+    /**
+     * Скидки
+     */
     val discounts: List<UcsDiscount>?,
 
+    /**
+     * Единицы измерения
+     */
     val units: String,
 
+
+    /**
+     * Стоимость позиции
+     */
     val amount: Double,
 
     /**
