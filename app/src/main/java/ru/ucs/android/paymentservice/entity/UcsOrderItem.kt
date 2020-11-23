@@ -33,7 +33,7 @@ data class UcsOrderItem(
      *    COMBOMODI  = 4;
      *    MODI       = 5;
      */
-    val type: Int?,
+    val type: UcsOrderItemType?,
 
     /**
      * Стоимость единицы предмета расчета
