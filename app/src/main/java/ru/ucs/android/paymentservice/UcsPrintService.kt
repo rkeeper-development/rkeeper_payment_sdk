@@ -13,6 +13,7 @@ abstract class UcsPrintService : Service() {
     companion object {
         const val START_PRINT_PAYMENT_CHECK = "ru.ucs.android.paymentservice.PRINT_CHECK"
         const val START_PRINT_REFUND_CHECK = "ru.ucs.android.paymentservice.PRINT_CHECK_REFUND"
+        const val START_REPRINT_LAST_CHECK = "ru.ucs.android.paymentservice.REPRINT_LAST_CHECK"
         const val START_PRINT_NONFISCAL = "ru.ucs.android.paymentservice.PRINT_NONFISCAL"
         const val START_PRINT_XREPORT = "ru.ucs.android.paymentservice.PRINT_XREPORT"
         const val START_PRINT_ZREPORT = "ru.ucs.android.paymentservice.PRINT_ZREPORT"
@@ -74,6 +75,11 @@ abstract class UcsPrintService : Service() {
                         stopSelfResult(startId)
                     }
                 }
+                START_REPRINT_LAST_CHECK ->
+                    GlobalScope.launch {
+                        startReprintLastCheckInternal(it)
+                        stopSelfResult(startId)
+                    }
                 START_PRINT_XREPORT -> {
                     GlobalScope.launch {
                         startPrintXReportInternal(it)
@@ -107,7 +113,6 @@ abstract class UcsPrintService : Service() {
     }
 
     suspend fun startPrintFiscalCheckInternal(intent: Intent){
-        Log.d("paymentmodule", "startPrintFiscalCheckInternal()")
         val operationId = intent.extras?.getString(PARAM_OPERATION_ID)
         val order = intent.extras?.getString(PARAM_ORDER)
         val headers = intent.extras?.getStringArray(PARAM_HEADERS)
@@ -117,7 +122,6 @@ abstract class UcsPrintService : Service() {
     }
 
     suspend fun startPrintRefundCheckInternal(intent: Intent){
-        Log.d("paymentmodule", "startPrintRefundCheckInternal()")
         val fiscalDocument = intent.extras?.getString(PARAM_FISCAL_DOCUMENT)
         val cashier = intent.extras?.getString(PARAM_CASHIER)
         val operationId = intent.extras?.getString(PARAM_OPERATION_ID)
@@ -126,11 +130,17 @@ abstract class UcsPrintService : Service() {
     }
 
     suspend fun startPrintNonFiscalDataInternal(intent: Intent){
-        Log.d("printService", "startPrintNonFiscalDataInternal()")
         val operationId = intent.extras?.getString(PARAM_OPERATION_ID)
         val text = intent.extras?.getString(PARAM_NON_FISCAL_DATA)
         val cashier = intent.extras?.getString(PARAM_CASHIER)
         val printResult = startPrintNonFiscalData(text, cashier)
+        postProcess(operationId, printResult)
+    }
+
+    suspend fun startReprintLastCheckInternal(intent: Intent){
+        val operationId = intent.extras?.getString(PARAM_OPERATION_ID)
+        val cashier = intent.extras?.getString(PARAM_CASHIER)
+        val printResult = startReprintLastCheck(cashier)
         postProcess(operationId, printResult)
     }
 
@@ -155,6 +165,8 @@ abstract class UcsPrintService : Service() {
     suspend abstract fun startPrintRefundCheck(fiscalDocument: String?, cashier: String?): PrintResult
 
     suspend abstract fun startPrintNonFiscalData(text: String?, cashier: String?): PrintResult
+
+    suspend abstract fun startReprintLastCheck(cashier: String?): PrintResult
 
     suspend abstract fun startPrintXReport(cashier: String?): PrintResult
 
