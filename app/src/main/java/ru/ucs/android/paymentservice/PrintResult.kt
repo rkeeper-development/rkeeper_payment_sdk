@@ -13,3 +13,5 @@ data class GetStatusComplete(
 object PrintProcess: PrintResult()
 data class PrintComplete(val fiscalDocument: String, val transactionId: String, val shiftNumber: String): PrintResult()
 data class PrintError(val errorCode: Int, val errorMsg: String): PrintResult()
+object InitSettingsComplete: PrintResult()
+data class InitSettingsError(val errorCode: Int, val errorMsg: String): PrintResult()

@@ -13,6 +13,11 @@ data class UcsCashier(
     val name: String?,
 
     /**
+     * ИНН кассира
+     */
+    val tin: String,
+
+    /**
      * Код кассира (опция)
      */
     val code: String?,
