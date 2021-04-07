@@ -1,5 +1,8 @@
 package ru.ucs.android.paymentservice.entity
 
+import ru.ucs.android.paymentservice.value.ReceiptType
+import ru.ucs.android.paymentservice.value.TaxationType
+
 /**
  * Заказ
  */
@@ -10,9 +13,19 @@ data class UcsOrder(
     val orderGUID: String,
 
     /**
+     * Тип чека
+     */
+    val type: ReceiptType,
+
+    /**
+     * Система налогооблажения
+     */
+    val taxationType: TaxationType,
+
+    /**
      * Сущность с данными кассира
      */
-    val cashier: UcsCashier?,
+    val cashier: UcsCashier,
 
     /**
      * Сущность с данными клиента
@@ -30,13 +43,8 @@ data class UcsOrder(
     val discounts: List<UcsDiscount>?,
 
     /**
-     * Тип оплаты: cash/card
+     * Платежи
      */
-    val paymentType: String,
-
-    /**
-     * Общая стоимость заказа
-     */
-    val amount: Double
+    val payments: List<UcsPayment>
 
 )

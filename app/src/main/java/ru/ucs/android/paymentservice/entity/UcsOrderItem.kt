@@ -1,5 +1,7 @@
 package ru.ucs.android.paymentservice.entity
 
+import ru.ucs.android.paymentservice.value.PaymentObject
+
 /**
  * Товарные позиции в заказе
  */
@@ -44,6 +46,11 @@ data class UcsOrderItem(
      * Количество предмета расчета
      */
     val quantity: Double,
+
+    /**
+     * Признак предмета расчета(товара)
+     */
+    val paymentObject: PaymentObject,
 
     /**
      * Скидки

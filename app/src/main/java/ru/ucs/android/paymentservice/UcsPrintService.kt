@@ -11,6 +11,9 @@ import kotlinx.coroutines.launch
 abstract class UcsPrintService : Service() {
 
     companion object {
+        const val CHECK_CONNECTION_STATUS = "ru.ucs.android.paymentservice.CHECK_CONNECTION_STATUS"
+        const val START_INIT_SETTINGS = "ru.ucs.android.paymentservice.START_INIT_SETTINGS"
+        const val CANCEL_INIT_SETTINGS = "ru.ucs.android.paymentservice.CANCEL_INIT_SETTINGS"
         const val START_PRINT_PAYMENT_CHECK = "ru.ucs.android.paymentservice.PRINT_CHECK"
         const val START_PRINT_REFUND_CHECK = "ru.ucs.android.paymentservice.PRINT_CHECK_REFUND"
         const val START_REPRINT_LAST_CHECK = "ru.ucs.android.paymentservice.REPRINT_LAST_CHECK"
@@ -18,11 +21,17 @@ abstract class UcsPrintService : Service() {
         const val START_PRINT_XREPORT = "ru.ucs.android.paymentservice.PRINT_XREPORT"
         const val START_PRINT_ZREPORT = "ru.ucs.android.paymentservice.PRINT_ZREPORT"
         const val START_GET_STATUS = "ru.ucs.android.paymentservice.GET_STATUS"
+        const val START_PRINT_OPEN_SHIFT_REPORT =
+            "ru.ucs.android.paymentservice.START_PRINT_OPEN_SHIFT_REPORT"
+        const val START_PRINT_CORRECTION_RECEIPT =
+            "ru.ucs.android.paymentservice.PRINT_CORRECTION_RECEIPT"
         const val START_EXTERNAL_ACTIVITY = "ru.ucs.android.paymentservice.START_EXTERNAL_ACTIVITY"
         const val GET_STATUS_COMPLETE = "ru.ucs.android.paymentservice.GET_STATUS_COMPLETE"
         const val PRINT_PROCESS = "ru.ucs.android.paymentservice.PRINT_PROCESS"
         const val PRINT_COMPLETE = "ru.ucs.android.paymentservice.PRINT_COMPLETE"
         const val PRINT_ERROR = "ru.ucs.android.paymentservice.PRINT_ERROR"
+        const val INIT_SETTINGS_COMPLETE = "ru.ucs.android.paymentservice.INIT_SETTINGS_COMPLETE"
+        const val INIT_SETTINGS_ERROR = "ru.ucs.android.paymentservice.INIT_SETTINGS_ERROR"
         const val PARAM_OPERATION_ID = "OperationId"
         const val PARAM_REG_NUMBER = "RegistrationNumber"
         const val PARAM_SHIFT_STATUS = "ShiftStatus"
@@ -54,6 +63,23 @@ abstract class UcsPrintService : Service() {
         intent?.let {
             val action = it.action
             when (action) {
+                START_INIT_SETTINGS -> {
+                    GlobalScope.launch {
+                        initSettingsInternal(it)
+                    }
+                }
+                CANCEL_INIT_SETTINGS -> {
+                    GlobalScope.launch {
+                        cancelInitSettingsInternal(it)
+                        stopSelfResult(startId)
+                    }
+
+                }
+                CHECK_CONNECTION_STATUS -> {
+                    GlobalScope.launch {
+                        checkConnectionStatusInternal(it)
+                    }
+                }
                 START_PRINT_PAYMENT_CHECK ->
                     GlobalScope.launch {
                         startPrintFiscalCheckInternal(it)
@@ -92,6 +118,18 @@ abstract class UcsPrintService : Service() {
                         stopSelfResult(startId)
                     }
                 }
+                START_PRINT_OPEN_SHIFT_REPORT -> {
+                    GlobalScope.launch {
+                        startPrintOpenShiftInternal(it)
+                        stopSelfResult(startId)
+                    }
+                }
+                START_PRINT_CORRECTION_RECEIPT -> {
+                    GlobalScope.launch {
+                        startPrintCorrectionReceiptInternal(it)
+                        stopSelfResult(startId)
+                    }
+                }
                 else -> null
             }
         }
@@ -99,20 +137,38 @@ abstract class UcsPrintService : Service() {
         return super.onStartCommand(intent, flags, startId)
     }
 
-    suspend fun onStartActivity(activityIntent: Intent){
+    suspend fun onStartActivity(activityIntent: Intent) {
         val intent = Intent(START_EXTERNAL_ACTIVITY).apply {
             putExtra(PARAM_EXTERNAL_ACTIVITY_INTENT, activityIntent)
         }
         sendBroadcast(intent)
     }
 
-    suspend fun startGetStatusInternal(intent: Intent){
+    suspend fun initSettingsInternal(intent: Intent) {
+        val operationId = intent.extras?.getString(PARAM_OPERATION_ID)
+        val printResult = initSettings()
+        postProcess(operationId = null, printResult = printResult)
+    }
+
+    suspend fun cancelInitSettingsInternal(intent: Intent) {
+        val operationId = intent.extras?.getString(PARAM_OPERATION_ID)
+        val printResult = cancelInitSettings()
+        postProcess(null, printResult)
+    }
+
+    suspend fun checkConnectionStatusInternal(intent: Intent) {
+        val operationId = intent.extras?.getString(PARAM_OPERATION_ID)
+        val printResult = checkConnectionStatus()
+        postProcess(operationId, printResult)
+    }
+
+    suspend fun startGetStatusInternal(intent: Intent) {
         val operationId = intent.extras?.getString(PARAM_OPERATION_ID)
         val printResult = getStatus()
         postProcess(operationId, printResult)
     }
 
-    suspend fun startPrintFiscalCheckInternal(intent: Intent){
+    suspend fun startPrintFiscalCheckInternal(intent: Intent) {
         val operationId = intent.extras?.getString(PARAM_OPERATION_ID)
         val order = intent.extras?.getString(PARAM_ORDER)
         val headers = intent.extras?.getStringArray(PARAM_HEADERS)
@@ -121,7 +177,7 @@ abstract class UcsPrintService : Service() {
         postProcess(operationId, printResult)
     }
 
-    suspend fun startPrintRefundCheckInternal(intent: Intent){
+    suspend fun startPrintRefundCheckInternal(intent: Intent) {
         val fiscalDocument = intent.extras?.getString(PARAM_FISCAL_DOCUMENT)
         val cashier = intent.extras?.getString(PARAM_CASHIER)
         val operationId = intent.extras?.getString(PARAM_OPERATION_ID)
@@ -129,7 +185,7 @@ abstract class UcsPrintService : Service() {
         postProcess(operationId, printResult)
     }
 
-    suspend fun startPrintNonFiscalDataInternal(intent: Intent){
+    suspend fun startPrintNonFiscalDataInternal(intent: Intent) {
         val operationId = intent.extras?.getString(PARAM_OPERATION_ID)
         val text = intent.extras?.getString(PARAM_NON_FISCAL_DATA)
         val cashier = intent.extras?.getString(PARAM_CASHIER)
@@ -137,32 +193,59 @@ abstract class UcsPrintService : Service() {
         postProcess(operationId, printResult)
     }
 
-    suspend fun startReprintLastCheckInternal(intent: Intent){
+    suspend fun startReprintLastCheckInternal(intent: Intent) {
         val operationId = intent.extras?.getString(PARAM_OPERATION_ID)
         val cashier = intent.extras?.getString(PARAM_CASHIER)
         val printResult = startReprintLastCheck(cashier)
         postProcess(operationId, printResult)
     }
 
-    suspend fun startPrintXReportInternal(intent: Intent){
+    suspend fun startPrintXReportInternal(intent: Intent) {
         val operationId = intent.extras?.getString(PARAM_OPERATION_ID)
         val cashier = intent.extras?.getString(PARAM_CASHIER)
         val printResult = startPrintXReport(cashier)
         postProcess(operationId, printResult)
     }
 
-    suspend fun startPrintZReportInternal(intent: Intent){
+    suspend fun startPrintZReportInternal(intent: Intent) {
         val operationId = intent.extras?.getString(PARAM_OPERATION_ID)
         val cashier = intent.extras?.getString(PARAM_CASHIER)
         val printResult = startPrintZReport(cashier)
         postProcess(operationId, printResult)
     }
 
+    suspend fun startPrintOpenShiftInternal(intent: Intent) {
+        val operationId = intent.extras?.getString(PARAM_OPERATION_ID)
+        val cashier = intent.extras?.getString(PARAM_CASHIER)
+        val printResult = startPrintOpenShift(cashier)
+        postProcess(operationId, printResult)
+    }
+
+    suspend fun startPrintCorrectionReceiptInternal(intent: Intent) {
+        val operationId = intent.extras?.getString(PARAM_OPERATION_ID)
+        val fiscalDocument = intent.extras?.getString(PARAM_FISCAL_DOCUMENT)
+        val printResult = startPrintCorrectionReceipt(fiscalDocument)
+        postProcess(operationId, printResult)
+    }
+
+    suspend abstract fun initSettings(): PrintResult
+
+    suspend abstract fun cancelInitSettings(): PrintResult
+
+    suspend abstract fun checkConnectionStatus(): PrintResult
+
     suspend abstract fun getStatus(): PrintResult
 
-    suspend abstract fun startPrintFiscalCheck(order: String?, headers: Array<String>?, footers: Array<String>?): PrintResult
+    suspend abstract fun startPrintFiscalCheck(
+        order: String?,
+        headers: Array<String>?,
+        footers: Array<String>?
+    ): PrintResult
 
-    suspend abstract fun startPrintRefundCheck(fiscalDocument: String?, cashier: String?): PrintResult
+    suspend abstract fun startPrintRefundCheck(
+        fiscalDocument: String?,
+        cashier: String?
+    ): PrintResult
 
     suspend abstract fun startPrintNonFiscalData(text: String?, cashier: String?): PrintResult
 
@@ -172,7 +255,11 @@ abstract class UcsPrintService : Service() {
 
     suspend abstract fun startPrintZReport(cashier: String?): PrintResult
 
-    private fun postProcess(operationId: String?, printResult: PrintResult){
+    suspend abstract fun startPrintOpenShift(cashier: String?): PrintResult
+
+    suspend abstract fun startPrintCorrectionReceipt(receipt: String?): PrintResult
+
+    private fun postProcess(operationId: String?, printResult: PrintResult) {
         val printResultIntent = when (printResult) {
             is PrintProcess ->
                 Intent(PRINT_PROCESS).apply {
@@ -196,6 +283,16 @@ abstract class UcsPrintService : Service() {
                 }
             is PrintError ->
                 Intent(PRINT_ERROR).apply {
+                    putExtra(PARAM_OPERATION_ID, operationId)
+                    putExtra(PARAM_ERROR_CODE, printResult.errorCode)
+                    putExtra(PARAM_ERROR_MESSAGE, printResult.errorMsg)
+                }
+            is InitSettingsComplete ->
+                Intent(INIT_SETTINGS_COMPLETE).apply {
+                    putExtra(PARAM_OPERATION_ID, operationId)
+                }
+            is InitSettingsError ->
+                Intent(INIT_SETTINGS_ERROR).apply {
                     putExtra(PARAM_OPERATION_ID, operationId)
                     putExtra(PARAM_ERROR_CODE, printResult.errorCode)
                     putExtra(PARAM_ERROR_MESSAGE, printResult.errorMsg)
